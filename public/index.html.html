@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RX Ads Agency PayPal Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #111827; --surface: #1F2937; --primary: #3B82F6; --text: #F9FAFB; --muted: #9CA3AF; --success: #10B981; --error: #EF4444; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--surface); padding: 2rem; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3), 0 10px 10px -5px rgba(0,0,0,0.2); width: 450px; border-top: 4px solid var(--primary); }
+        h2 { margin-top: 0; text-align: center; font-size: 1.5rem; color: var(--primary); }
+        fieldset { border: 1px solid #4B5563; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; }
+        legend { padding: 0 0.5rem; font-weight: 600; color: var(--primary); }
+        input { width: 100%; padding: 0.75rem; background: #374151; border: 1px solid #4B5563; border-radius: 6px; color: var(--text); box-sizing: border-box; margin-bottom: 0.5rem; }
+        button { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: #2563EB; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+        button:disabled { background: #4B5563; cursor: not-allowed; }
+        #status-container { margin-top: 1.5rem; background: #111827; padding: 1rem; border-radius: 8px; min-height: 100px; max-height: 200px; overflow-y: auto; }
+        #status-list { list-style: none; padding: 0; margin: 0; }
+        #status-list li { padding: 0.5rem; border-bottom: 1px solid #374151; animation: fadeIn 0.5s; }
+        #status-list li.success { color: var(--success); }
+        #status-list li.error { color: var(--error); font-weight: 600; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>RX Ads Agency PayPal Tools</h2>
+        <form id="automation-form">
+            <fieldset>
+                <legend>Facebook Credentials</legend>
+                <input type="email" id="fbEmail" placeholder="Facebook Email" required>
+                <input type="password" id="fbPassword" placeholder="Facebook Password" required>
+            </fieldset>
+            <fieldset>
+                <legend>Account IDs</legend>
+                <input type="text" id="adAccountId" placeholder="Ad Account ID" required>
+            </fieldset>
+            <fieldset>
+                <legend>PayPal Credentials</legend>
+                <input type="email" id="paypalEmail" placeholder="PayPal Email" required>
+                <input type="password" id="paypalPassword" placeholder="PayPal Password" required>
+            </fieldset>
+            <button type="submit" id="submitBtn">Start Automation</button>
+        </form>
+        <div id="status-container">
+            <ul id="status-list"></ul>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const form = document.getElementById('automation-form');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusList = document.getElementById('status-list');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            statusList.innerHTML = ''; 
+
+            const data = {
+                fbEmail: document.getElementById('fbEmail').value,
+                fbPassword: document.getElementById('fbPassword').value,
+                adAccountId: document.getElementById('adAccountId').value,
+                paypalEmail: document.getElementById('paypalEmail').value,
+                paypalPassword: document.getElementById('paypalPassword').value,
+            };
+            socket.emit('start-automation', data);
+        });
+
+        socket.on('status-update', (data) => {
+            const li = document.createElement('li');
+            li.textContent = data.message;
+            li.className = data.type;
+            statusList.appendChild(li);
+            statusList.scrollTop = statusList.scrollHeight;
+
+            if(data.type === 'error' || data.type === 'success'){
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Automation';
+            }
+        });
+    </script>
+</body>
+</html>
